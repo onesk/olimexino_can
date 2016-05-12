@@ -55,7 +55,6 @@ static void MX_GPIO_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 int main(void)
@@ -78,7 +77,6 @@ int main(void)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -86,7 +84,12 @@ int main(void)
   while (1)
   {
   /* USER CODE END WHILE */
-
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, 1);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 0);
+      HAL_Delay(100);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, 0);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, 1);
+      HAL_Delay(100);
   /* USER CODE BEGIN 3 */
 
   }
