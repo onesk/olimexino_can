@@ -221,34 +221,46 @@ static void led_usb_init() {
 /* CAN init function */
 void MX_CAN_Init(void)
 {
+   GPIO_InitTypeDef GPIO_InitStruct;
+   GPIO_InitStruct.Pin = GPIO_Pin_8;
+   GPIO_InitStruct.Mode = GPIO_MODE_IPU;//!
+   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  hcan.Instance = CAN1;
-  hcan.Init.Prescaler = 6;
-  hcan.Init.Mode = CAN_MODE_LOOPBACK;
-  hcan.Init.SJW = CAN_SJW_1TQ;
-  hcan.Init.BS1 = CAN_BS1_6TQ;
-  hcan.Init.BS2 = CAN_BS2_5TQ;
-  hcan.Init.TTCM = DISABLE;
-  hcan.Init.ABOM = DISABLE;
-  hcan.Init.AWUM = DISABLE;
-  hcan.Init.NART = DISABLE;
-  hcan.Init.RFLM = DISABLE;
-  hcan.Init.TXFP = DISABLE;
-  HAL_CAN_Init(&hcan);
+   GPIO_InitStruct.Pin = GPIO_Pin_9;
+   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;//!
+   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  
+   GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
+  
+   RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
 
-  filter.FilterIdHigh = 0;
-  filter.FilterIdLow = 0;
-  filter.FilterMaskIdHigh = 0;
-  filter.FilterMaskIdLow = 0;
-  filter.FilterMode = CAN_FILTERMODE_IDMASK;
-  filter.FilterScale = CAN_FILTERSCALE_32BIT;
-  filter.FilterNumber = 0;
-  filter.FilterFIFOAssignment = CAN_FIFO0;
-  filter.BankNumber = 0;
-  filter.FilterActivation = ENABLE;
+   hcan.Instance = CAN1;
+   hcan.Init.Prescaler = 6;
+   hcan.Init.Mode = CAN_MODE_LOOPBACK;
+   hcan.Init.SJW = CAN_SJW_1TQ;
+   hcan.Init.BS1 = CAN_BS1_6TQ;
+   hcan.Init.BS2 = CAN_BS2_5TQ;
+   hcan.Init.TTCM = DISABLE;
+   hcan.Init.ABOM = DISABLE;
+   hcan.Init.AWUM = DISABLE;
+   hcan.Init.NART = DISABLE;
+   hcan.Init.RFLM = DISABLE;
+   hcan.Init.TXFP = DISABLE;
+   hcan.pTxMsg = NULL;
+   HAL_CAN_Init(&hcan);
 
-  hcan.pTxMsg = NULL;
-  HAL_CAN_ConfigFilter(&hcan, &filter);
+   filter.FilterIdHigh = 0;
+   filter.FilterIdLow = 0;
+   filter.FilterMaskIdHigh = 0;
+   filter.FilterMaskIdLow = 0;
+   filter.FilterMode = CAN_FILTERMODE_IDMASK;
+   filter.FilterScale = CAN_FILTERSCALE_32BIT;
+   filter.FilterNumber = 0;
+   filter.FilterFIFOAssignment = CAN_FIFO0;
+   filter.BankNumber = 0;
+   filter.FilterActivation = ENABLE;
+   HAL_CAN_ConfigFilter(&hcan, &filter);
 }
 
 /* USER CODE END 4 */
