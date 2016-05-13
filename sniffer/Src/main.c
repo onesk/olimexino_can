@@ -50,6 +50,8 @@
 void SystemClock_Config(void);
 static void led_usb_init(void);
 
+static void MAX_CAN_Init(void);
+
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
@@ -171,6 +173,27 @@ static void led_usb_init() {
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
+
+/* CAN init function */
+void MX_CAN_Init(void)
+{
+
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 6;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SJW = CAN_SJW_1TQ;
+  hcan.Init.BS1 = CAN_BS1_6TQ;
+  hcan.Init.BS2 = CAN_BS2_5TQ;
+  hcan.Init.TTCM = DISABLE;
+  hcan.Init.ABOM = DISABLE;
+  hcan.Init.AWUM = DISABLE;
+  hcan.Init.NART = DISABLE;
+  hcan.Init.RFLM = DISABLE;
+  hcan.Init.TXFP = DISABLE;
+  HAL_CAN_Init(&hcan);
+
+}
+
 /* USER CODE END 4 */
 
 #ifdef USE_FULL_ASSERT
