@@ -107,8 +107,6 @@ int main(void)
   }
 
   MX_CAN_Init();
-  
-  //  uint8_t msg[] = "hui pizda djigurda\n";
 
   uint32_t id = 0;
   CanTxMsgTypeDef tx_msg;
@@ -130,6 +128,9 @@ int main(void)
 	  tx_msg.Data[0] = (id++) & 0xff;
 	  hcan.pTxMsg = &tx_msg;
 	  HAL_CAN_Transmit(&hcan, 10);
+
+	  HAL_Delay(10);
+	  continue;
 
 	  uint8_t any = 1;
 	  uint32_t startTick = HAL_GetTick();
@@ -221,23 +222,27 @@ static void led_usb_init() {
 /* CAN init function */
 void MX_CAN_Init(void)
 {
-   GPIO_InitTypeDef GPIO_InitStruct;
-   GPIO_InitStruct.Pin = GPIO_Pin_8;
-   GPIO_InitStruct.Mode = GPIO_MODE_IPU;//!
-   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+   __HAL_RCC_CAN1_CLK_ENABLE();
 
-   GPIO_InitStruct.Pin = GPIO_Pin_9;
-   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;//!
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-  
-   GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
-  
-   RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+   AFIO->MAPR &= 0xFFFF9FFF;
+   AFIO->MAPR |= 0x00004000;
+
+   GPIO_InitTypeDef GPIO_Struct;
+   GPIO_Struct.Mode = GPIO_MODE_AF_INPUT;
+   GPIO_Struct.Pull = GPIO_NOPULL;
+   GPIO_Struct.Pin = GPIO_PIN_8;
+   GPIO_Struct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+   HAL_GPIO_Init(GPIOB, &GPIO_Struct);
+
+   GPIO_Struct.Mode = GPIO_MODE_AF_PP;
+   GPIO_Struct.Pull = GPIO_NOPULL;
+   GPIO_Struct.Pin = GPIO_PIN_9;
+   GPIO_Struct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+   HAL_GPIO_Init(GPIOB, &GPIO_Struct);
 
    hcan.Instance = CAN1;
    hcan.Init.Prescaler = 6;
-   hcan.Init.Mode = CAN_MODE_LOOPBACK;
+   hcan.Init.Mode = CAN_MODE_NORMAL;
    hcan.Init.SJW = CAN_SJW_1TQ;
    hcan.Init.BS1 = CAN_BS1_6TQ;
    hcan.Init.BS2 = CAN_BS2_5TQ;
