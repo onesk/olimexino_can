@@ -41,6 +41,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan;
+CAN_FilterConfTypeDef filter;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -195,6 +196,19 @@ void MX_CAN_Init(void)
   hcan.Init.TXFP = DISABLE;
   HAL_CAN_Init(&hcan);
 
+  filter.FilterIdHigh = 0;
+  filter.FilterIdLow = 0;
+  filter.FilterMaskIdHigh = 0;
+  filter.FilterMaskIdLow = 0;
+  filter.FilterMode = CAN_FILTERMODE_IDMASK;
+  filter.FilterScale = CAN_FILTERSCALE_32BIT;
+  filter.FilterNumber = 0;
+  filter.FilterFIFOAssignment = CAN_FIFO0;
+  filter.BankNumber = 0;
+  filter.FilterActivation = ENABLE;
+
+  hcan.pTxMsg = NULL;
+  HAL_CAN_ConfigFilter(&hcan, &filter);
 }
 
 /* USER CODE END 4 */
