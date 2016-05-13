@@ -38,7 +38,6 @@
 
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
-#include "can.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -54,7 +53,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 static void led_usb_init(void);
-static void can_init(void);
+static void can_filter_init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -180,17 +179,16 @@ int main(void)
 
   // loop forever
   CanRxMsgTypeDef rx_msg;
-  uint32_t status;
   uint32_t length;
   uint8_t msg_buf[SLCAN_MTU];
 
 
   tx_msg.IDE = CAN_ID_EXT;
-  frame.StdId = 13;
-  frame.ExtId = 13;
-  frame.DLC = 2;
-  frame.Data[0] = id & 0xff;
-  frame.Data[1] = (id >> 8) & 0xff;
+  tx_msg.StdId = 13;
+  tx_msg.ExtId = 13;
+  tx_msg.DLC = 2;
+  tx_msg.Data[0] = id & 0xff;
+  tx_msg.Data[1] = (id >> 8) & 0xff;
   hcan.pTxMsg = &tx_msg;
   HAL_CAN_Transmit(&hcan, 10);
   id++;
@@ -198,10 +196,10 @@ int main(void)
   while (1)
   {
      /* busy wait */
-     while (__HAL_CAN_MSG_PENDING(&hcan, fifo) <= 0) ;
+     while (__HAL_CAN_MSG_PENDING(&hcan, CAN_FIFO0) <= 0) ;
      flip_led();
 
-     hcan.pRxMsg = rx_msg;
+     hcan.pRxMsg = &rx_msg;
 
      if (HAL_CAN_Receive(&hcan, CAN_FIFO0, 3) == HAL_OK)
      {
@@ -214,11 +212,11 @@ int main(void)
   /* USER CODE BEGIN 3 */
      HAL_Delay(500);
   tx_msg.IDE = CAN_ID_EXT;
-  frame.StdId = 13;
-  frame.ExtId = 13;
-  frame.DLC = 2;
-  frame.Data[0] = id & 0xff;
-  frame.Data[1] = (id >> 8) & 0xff;
+  tx_msg.StdId = 13;
+  tx_msg.ExtId = 13;
+  tx_msg.DLC = 2;
+  tx_msg.Data[0] = id & 0xff;
+  tx_msg.Data[1] = (id >> 8) & 0xff;
   hcan.pTxMsg = &tx_msg;
   HAL_CAN_Transmit(&hcan, 10);
   id++;
