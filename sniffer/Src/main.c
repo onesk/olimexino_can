@@ -114,7 +114,7 @@ int main(void)
   CanTxMsgTypeDef tx_msg;
   CanRxMsgTypeDef rx_msg;
 
-  uint8_t skip[5] = "skip\n";
+  uint8_t skip_msg[5] = "skip\n";
   
   uint8_t data[2];
   data[1] = '\n';
@@ -135,7 +135,7 @@ int main(void)
 	  uint32_t startTick = HAL_GetTick();
 	  while (__HAL_CAN_MSG_PENDING(&hcan, CAN_FIFO0) <= 0)
 	  {
-		 if (HAL_GetTick() - start > 200)
+		 if (HAL_GetTick() - startTick > 200)
 		 {
 			any = 0;
 			break;
