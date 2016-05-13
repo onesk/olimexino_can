@@ -40,6 +40,7 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+CAN_HandleTypeDef hcan;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
