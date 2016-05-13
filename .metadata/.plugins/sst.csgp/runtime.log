@@ -18,3 +18,23 @@ GUI is waiting for subprocess to be done...
 Execution done. EXIT CODE = 0
   Logging finished.  ## CURRENT TIME  : [5/12, 2016   22:34  40.496]
 ------------------------------------
+
+------------------------------------
+  Logging start.  ## CURRENT TIME  : [5/13, 2016   0:48  46.93]  ## COMMAND LINE  : 
+cmd /C "gen_csini.exe"
+------------------------------------
+[STD-IN] : E:\sniffer\olimexino_can\.metadata\.plugins\sst.csgp\bin\env_vars.txt
+GUI is waiting for subprocess to be done...
+Execution done. EXIT CODE = 0
+  Logging finished.  ## CURRENT TIME  : [5/13, 2016   0:48  50.749]
+------------------------------------
+
+------------------------------------
+  Logging start.  ## CURRENT TIME  : [5/13, 2016   1:24  20.344]  ## COMMAND LINE  : 
+cmd /C "gen_csini.exe"
+------------------------------------
+[STD-IN] : E:\sniffer\olimexino_can\.metadata\.plugins\sst.csgp\bin\env_vars.txt
+GUI is waiting for subprocess to be done...
+Execution done. EXIT CODE = 0
+  Logging finished.  ## CURRENT TIME  : [5/13, 2016   1:24  27.16]
+------------------------------------

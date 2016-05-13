@@ -4,6 +4,10 @@
 		<list key="ENABLED_TRANSFERS">
 		</list>
 	</section>
+	<section name="ResourceNavigator">
+		<item value="" key="ResourceWorkingSetFilter.STORE_WORKING_SET"/>
+		<item value="1" key="ResourceViewer.STORE_SORT_TYPE"/>
+	</section>
 	<section name="ChooseWorkspaceDialogSettings">
 		<item value="214" key="DIALOG_X_ORIGIN"/>
 		<item value="222" key="DIALOG_Y_ORIGIN"/>

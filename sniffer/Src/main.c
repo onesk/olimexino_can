@@ -36,7 +36,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -48,6 +48,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void led_usb_init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -55,6 +56,13 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+volatile int led_state = 0;
+void flip_led()
+{
+	led_state ^= 0x1;
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, led_state ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, led_state ? GPIO_PIN_RESET : GPIO_PIN_SET);
+}
 
 /* USER CODE END 0 */
 
@@ -75,6 +83,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  led_usb_init();
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
@@ -83,8 +92,24 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  /* olimexino stm32 has poorly documented DISC pin which needs to be pulled to ground in order to enable USB. */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
+
+  for (uint8_t i = 0; i < 10; ++i)
+  {
+	  flip_led();
+	  HAL_Delay(100);
+  }
+
+  uint8_t msg[] = "hui pizda djigurda\n";
   while (1)
   {
+	  flip_led();
+	  HAL_Delay(1000);
+
+	  CDC_Transmit_FS(msg, 19);
+
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -132,7 +157,20 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void led_usb_init() {
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+}
 /* USER CODE END 4 */
 
 #ifdef USE_FULL_ASSERT
