@@ -108,13 +108,34 @@ int main(void)
 
   MX_CAN_Init();
   
-  uint8_t msg[] = "hui pizda djigurda\n";
+  //  uint8_t msg[] = "hui pizda djigurda\n";
+
+  uint32_t id = 0;
+  CanTxMsgTypeDef tx_msg;
+  CanRxMsgTypeDef rx_msg;
+
+  uint8_t data[2];
+  data[1] = '\n';
+  
   while (1)
   {
 	  flip_led();
-	  HAL_Delay(1000);
 
-	  CDC_Transmit_FS(msg, 19);
+	  tx_msg.RTR = CAN_RTR_DATA;
+	  tx_msg.IDE = CAN_ID_STD;
+	  tx_msg.StdId = tx_msg.ExtId = 13;
+	  tx_msg.DLC = 1;
+	  tx_msg.Data[0] = (id++) & 0xff;
+	  hcan.pTxMsg = &tx_msg;
+	  HAL_CAN_Transmit(&hcan, 10);
+
+     while (__HAL_CAN_MSG_PENDING(&hcan, CAN_FIFO0) <= 0) ;
+
+	 hcan.pRxMsg = &rx_msg;
+	 data[0] = (uint8_t) HAL_CAN_Receive(&hcan, CAN_FIFO0, 3);
+	 CDC_Transmit_FS(data, 2);
+	 
+	  //  CDC_Transmit_FS(msg, 19);
 
   /* USER CODE END WHILE */
 
@@ -184,7 +205,7 @@ void MX_CAN_Init(void)
 
   hcan.Instance = CAN1;
   hcan.Init.Prescaler = 6;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.Mode = CAN_MODE_LOOPBACK;
   hcan.Init.SJW = CAN_SJW_1TQ;
   hcan.Init.BS1 = CAN_BS1_6TQ;
   hcan.Init.BS2 = CAN_BS2_5TQ;
