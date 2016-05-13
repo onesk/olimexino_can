@@ -42,6 +42,7 @@
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan;
 CAN_FilterConfTypeDef filter;
+UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -68,6 +69,22 @@ void flip_led()
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, led_state ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
 
+/* USART1 init function */
+void MX_USART1_UART_Init(void)
+{
+
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  HAL_UART_Init(&huart1);
+
+}
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -88,8 +105,9 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   led_usb_init();
-  MX_USB_DEVICE_Init();
-
+  //  MX_USB_DEVICE_Init();
+  MX_USART1_UART_Init();
+  
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -98,7 +116,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   /* olimexino stm32 has poorly documented DISC pin which needs to be pulled to ground in order to enable USB. */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
 
   for (uint8_t i = 0; i < 10; ++i)
   {
@@ -128,6 +146,8 @@ int main(void)
 	  tx_msg.Data[0] = (id++) & 0xff;
 	  hcan.pTxMsg = &tx_msg;
 	  HAL_CAN_Transmit(&hcan, 10);
+
+	  HAL_UART_Transmit(&huart1, skip_msg, 5, 10);
 
 	  HAL_Delay(10);
 	  continue;
