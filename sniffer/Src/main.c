@@ -50,7 +50,7 @@
 void SystemClock_Config(void);
 static void led_usb_init(void);
 
-static void MAX_CAN_Init(void);
+static void MX_CAN_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -104,6 +104,8 @@ int main(void)
 	  HAL_Delay(100);
   }
 
+  MX_CAN_Init();
+  
   uint8_t msg[] = "hui pizda djigurda\n";
   while (1)
   {
