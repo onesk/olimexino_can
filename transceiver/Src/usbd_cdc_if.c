@@ -59,8 +59,8 @@
 /* USER CODE BEGIN PRIVATE_DEFINES */
 /* Define size for the receive and transmit buffer over CDC */
 /* It's up to user to redefine and/or remove those define */
-#define APP_RX_DATA_SIZE  4
-#define APP_TX_DATA_SIZE  4
+#define APP_RX_DATA_SIZE  64
+#define APP_TX_DATA_SIZE  64
 /* USER CODE END PRIVATE_DEFINES */
 /**
   * @}
@@ -213,7 +213,13 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
   case CDC_SET_LINE_CODING:   
-	
+	pbuf[0] = (uint8_t)(115200);
+	pbuf[1] = (uint8_t)(115200 >> 8);
+	pbuf[2] = (uint8_t)(115200 >> 16);
+	pbuf[3] = (uint8_t)(115200 >> 24);
+	pbuf[4] = 0;
+	pbuf[5] = 0;
+	pbuf[6] = 8;
     break;
 
   case CDC_GET_LINE_CODING:     

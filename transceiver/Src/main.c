@@ -35,7 +35,7 @@
 #include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -77,18 +77,43 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  GPIO_InitTypeDef GPIO_Struct;
+  GPIO_Struct.Pin = GPIO_PIN_8;
+  GPIO_Struct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_Struct.Pull = GPIO_NOPULL;
+  GPIO_Struct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_Struct);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
+  GPIO_Struct.Pin = GPIO_PIN_5;
+  GPIO_Struct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_Struct.Pull = GPIO_NOPULL;
+  GPIO_Struct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_Struct);
 
   /* USER CODE END 2 */
 
+  HAL_Delay(2000);
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t msg1[] = "testing\n";
+  uint8_t msg2[] = "usbdcdc\n";
   while (1)
   {
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+	  CDC_Transmit_FS(msg1, 8);
+	  HAL_Delay(100);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+	  CDC_Transmit_FS(msg2, 8);
+	  HAL_Delay(100);
   /* USER CODE END WHILE */
+
+
 
   /* USER CODE BEGIN 3 */
 
@@ -168,6 +193,7 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
 }
 
