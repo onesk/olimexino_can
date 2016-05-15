@@ -279,7 +279,7 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
-  /* USER CODE BEGIN 7 */
+  /* USER CODE BEGIN 7 */ 
   for (uint16_t i = 0; i < APP_TX_DATA_SIZE; ++i)
 	  UserTxBufferFS[i] = 0;
 
