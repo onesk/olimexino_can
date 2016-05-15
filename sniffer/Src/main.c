@@ -32,107 +32,33 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
-#include "usb_device.h"
 
 /* USER CODE BEGIN Includes */
-#include "usbd_cdc_if.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan;
 
+SPI_HandleTypeDef hspi1;
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-CAN_FilterConfTypeDef filter;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN_Init(void);
+static void MX_SPI1_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-static void led_usb_init(void);
-static void can_filter_init(void);
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-#define SLCAN_MTU 64
-
-#define SLCAN_STD_ID_LEN 3
-#define SLCAN_EXT_ID_LEN 8
-
-volatile int led_state = 0;
-void flip_led()
-{
-	led_state ^= 0x1;
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, led_state ? GPIO_PIN_SET : GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, led_state ? GPIO_PIN_RESET : GPIO_PIN_SET);
-}
-
-int8_t slcan_parse_frame(uint8_t *buf, CanRxMsgTypeDef *frame) {
-    uint8_t i = 0;
-    uint8_t id_len, j;
-    uint32_t tmp;
-
-    for (j=0; j < SLCAN_MTU; j++) {
-        buf[j] = '\0';
-    }
-
-    // add character for frame type
-    if (frame->RTR == CAN_RTR_DATA) {
-        buf[i] = 't';
-    } else if (frame->RTR == CAN_RTR_REMOTE) {
-        buf[i] = 'r';
-    }
-
-    // assume standard identifier
-    id_len = SLCAN_STD_ID_LEN;
-    tmp = frame->StdId;
-    // check if extended
-    if (frame->IDE == CAN_ID_EXT) {
-        // convert first char to upper case for extended frame
-        buf[i] -= 32;
-        id_len = SLCAN_EXT_ID_LEN;
-        tmp = frame->ExtId;
-    }
-    i++;
-
-    // add identifier to buffer
-    for(j=id_len; j > 0; j--) {
-        // add nibble to buffer
-        buf[j] = (tmp & 0xF);
-        tmp = tmp >> 4;
-        i++;
-    }
-
-    // add DLC to buffer
-    buf[i++] = frame->DLC;
-
-    // add data bytes
-    int dlc = frame->DLC;
-    if (dlc > 8) dlc = 8;
-    for (j = 0; j < dlc; j++) {
-        buf[i++] = (frame->Data[j] >> 4);
-        buf[i++] = (frame->Data[j] & 0x0F);
-    }
-
-    // convert to ASCII (2nd character to end)
-    for (j = 1; j < i; j++) {
-        if (buf[j] < 0xA) {
-            buf[j] += 0x30;
-        } else {
-            buf[j] += 0x37;
-        }
-    }
-
-    // add carrage return (slcan EOL)
-    buf[i++] = '\r';
-
-    // return number of bytes in string
-    return i;
-}
 
 /* USER CODE END 0 */
 
@@ -154,67 +80,19 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN_Init();
-  MX_USB_DEVICE_Init();
+  MX_SPI1_Init();
 
   /* USER CODE BEGIN 2 */
-  led_usb_init();
-  can_filter_init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  /* olimexino stm32 has poorly documented DISC pin which needs to be pulled to ground in order to enable USB. */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, GPIO_PIN_RESET);
-
-
-  /* signal start of operation by blinking */
-  for (uint8_t i = 0; i < 32; ++i)
-  {
-	  flip_led();
-	  HAL_Delay(100);
-  }
-
-  uint32_t id = 0;
-  CanTxMsgTypeDef tx_msg;
-
-  tx_msg.IDE = CAN_ID_EXT;
-  tx_msg.StdId = 13;
-  tx_msg.ExtId = 13;
-  tx_msg.DLC = 2;
-  tx_msg.Data[0] = id & 0xff;
-  tx_msg.Data[1] = (id >> 8) & 0xff;
-  hcan.pTxMsg = &tx_msg;
-  HAL_CAN_Transmit(&hcan, 10);
-  id++;
-
   while (1)
   {
-     /* busy wait */
-     while (__HAL_CAN_MSG_PENDING(&hcan, CAN_FIFO0) <= 0) ;
-     flip_led();
-
-     hcan.pRxMsg = &rx_msg;
-
-     if (HAL_CAN_Receive(&hcan, CAN_FIFO0, 3) == HAL_OK)
-     {
-        length = slcan_parse_frame(msg_buf, &rx_msg);
-        CDC_Transmit_FS(msg_buf, length);
-     }
-
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-     HAL_Delay(500);
-  tx_msg.IDE = CAN_ID_EXT;
-  tx_msg.StdId = 13;
-  tx_msg.ExtId = 13;
-  tx_msg.DLC = 2;
-  tx_msg.Data[0] = id & 0xff;
-  tx_msg.Data[1] = (id >> 8) & 0xff;
-  hcan.pTxMsg = &tx_msg;
-  HAL_CAN_Transmit(&hcan, 10);
-  id++;
 
   }
   /* USER CODE END 3 */
@@ -228,7 +106,6 @@ void SystemClock_Config(void)
 
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
-  RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -245,10 +122,6 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
-
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB;
-  PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
-  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/8000);
 
@@ -278,9 +151,29 @@ void MX_CAN_Init(void)
 
 }
 
-/** Configure pins as
-        * Analog
-        * Input
+/* SPI1 init function */
+void MX_SPI1_Init(void)
+{
+
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  HAL_SPI_Init(&hspi1);
+
+}
+
+/** Configure pins as 
+        * Analog 
+        * Input 
         * Output
         * EVENT_OUT
         * EXTI
@@ -297,36 +190,7 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-static void led_usb_init() {
-    GPIO_InitTypeDef GPIO_InitStruct;
-    GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_5;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_12;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-}
-
-static void can_filter_init(void) {
-    filter.FilterIdHigh = 0;
-    filter.FilterIdLow = 0;
-    filter.FilterMaskIdHigh = 0;
-    filter.FilterMaskIdLow = 0;
-    filter.FilterMode = CAN_FILTERMODE_IDMASK;
-    filter.FilterScale = CAN_FILTERSCALE_32BIT;
-    filter.FilterNumber = 0;
-    filter.FilterFIFOAssignment = CAN_FIFO0;
-    filter.BankNumber = 0;
-    filter.FilterActivation = ENABLE;
-
-    hcan.pTxMsg = NULL;
-    HAL_CAN_ConfigFilter(&hcan, &filter);
-}
 /* USER CODE END 4 */
 
 #ifdef USE_FULL_ASSERT
@@ -351,10 +215,10 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-  */
+  */ 
 
 /**
   * @}
-*/
+*/ 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
