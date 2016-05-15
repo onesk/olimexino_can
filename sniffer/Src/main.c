@@ -102,6 +102,9 @@ int main(void)
 	  hcan.pTxMsg = &tx_msg;
 	  HAL_CAN_Transmit(&hcan, 10);
 
+	  uint8_t spi_data[8] = "tstdata\n";
+	  HAL_SPI_Transmit(&hspi1, spi_data, 8, 10);
+
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
