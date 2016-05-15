@@ -38,6 +38,8 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define MCP2551_RS_to_high_speed_Pin GPIO_PIN_13
+#define MCP2551_RS_to_high_speed_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
