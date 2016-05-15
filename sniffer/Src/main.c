@@ -89,6 +89,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   CanTxMsgTypeDef tx_msg;
+  int cnt = 0;
   while (1)
   {
 	  tx_msg.DLC = 8;
@@ -102,7 +103,12 @@ int main(void)
 	  hcan.pTxMsg = &tx_msg;
 	  HAL_CAN_Transmit(&hcan, 10);
 
-	  uint8_t spi_data[8] = "tstdata\n";
+	  cnt++;
+	  uint8_t spi_data[13] = "iiiimmmmMMMM\n";
+	  int ccnt = cnt;
+	  for (int i = 9; i >= 0; --i)
+		  spi_data[i] = (cnt % 10) + '0', cnt /= 10;
+
 	  HAL_SPI_Transmit(&hspi1, spi_data, 8, 10);
 
   /* USER CODE END WHILE */
