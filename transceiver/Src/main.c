@@ -60,9 +60,12 @@ static void MX_SPI1_Init(void);
 int led = 0;
 void led_swap()
 {
-	led ^= 1;
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, led);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, led ^ 1);
+	if (led++ >= 3)
+		led = 0;
+
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, led == 0);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, led == 1);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, led == 2);
 }
 
 /* USER CODE END 0 */
@@ -101,12 +104,20 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint8_t retry[] = "hiiiimmmmmmmm\n";
+  uint8_t data[8];
   while (1)
   {
 	  led_swap();
 
-	  CDC_Transmit_FS(retry, 14);
-	  HAL_Delay(1);
+	  if (HAL_OK == HAL_SPI_Receive(&hspi1, data, 8, 100))
+	  {
+		  CDC_Transmit_FS(data, 8);
+
+	  } else
+	  {
+		  CDC_Transmit_FS(retry, 14);
+
+	  }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
