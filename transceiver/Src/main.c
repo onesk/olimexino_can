@@ -101,16 +101,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t msg1[] = "testing\n";
-  uint8_t msg2[] = "usbdcdc\n";
+  uint8_t skip_msg[] = "skipmsg\n";
+  uint8_t recv_buf[128];
+  uint16_t recv_buf_len;
   while (1)
   {
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
-	  CDC_Transmit_FS(msg1, 8);
-	  HAL_Delay(100);
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-	  CDC_Transmit_FS(msg2, 8);
-	  HAL_Delay(100);
+	  if (HAL_OK == HAL_SPI_Receive(&hspi1, recv_buf, 8, 1000))
+	  {
+		  CDC_Transmit_FS(recv_buf, 8);
+	  } else
+	  {
+		  CDC_Transmit_FS(skip_msg, 8);
+	  }
+
   /* USER CODE END WHILE */
 
 
