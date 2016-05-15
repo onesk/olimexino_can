@@ -105,11 +105,17 @@ int main(void)
 
 	  cnt++;
 	  uint8_t spi_data[13] = "iiiimmmmMMMM\n";
-	  int ccnt = cnt;
+/*	  int ccnt = cnt;
 	  for (int i = 9; i >= 0; --i)
-		  spi_data[i] = (cnt % 10) + '0', cnt /= 10;
+	  {
+		  spi_data[i] = (ccnt % 10) + '0';
+		  ccnt /= 10;
+	  }
 
-	  HAL_SPI_Transmit(&hspi1, spi_data, 8, 10);
+	  spi_data[12] = '\n';
+	  spi_data[10] = spi_data[11] = 'X';
+*/
+	  HAL_SPI_Transmit(&hspi1, spi_data, 13, 10);
 
   /* USER CODE END WHILE */
 
