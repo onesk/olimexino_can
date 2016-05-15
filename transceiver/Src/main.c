@@ -57,6 +57,13 @@ static void MX_SPI1_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+int led = 0;
+void led_swap()
+{
+	led ^= 1;
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, led);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, led ^ 1);
+}
 
 /* USER CODE END 0 */
 
@@ -81,29 +88,22 @@ int main(void)
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-  GPIO_Struct.Pin = GPIO_PIN_5;
-  GPIO_Struct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_Struct.Pull = GPIO_NOPULL;
-  GPIO_Struct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_Struct);
-
+  for (int i = 0; i < 50; ++i)
+  {
+	  led_swap();
+	  HAL_Delay(100);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t skip_msg[] = "skipmsg\n";
-  uint8_t recv_buf[128];
-  uint16_t recv_buf_len;
+  uint8_t retry[] = "hiiiimmmmmmmm\n";
   while (1)
   {
-	  if (HAL_OK == HAL_SPI_Receive(&hspi1, recv_buf, 8, 1000))
-	  {
-		  CDC_Transmit_FS(recv_buf, 8);
-	  } else
-	  {
-		  CDC_Transmit_FS(skip_msg, 8);
-	  }
+	  led_swap();
 
+	  CDC_Transmit_FS(retry, 14);
+	  HAL_Delay(1);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
