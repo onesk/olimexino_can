@@ -143,7 +143,6 @@ static int8_t CDC_Init_FS(void)
   hUsbDevice_0 = &hUsbDeviceFS;
   /* USER CODE BEGIN 3 */ 
   /* Set Application Buffers */
-  USBD_CDC_SetTxBuffer(hUsbDevice_0, UserTxBufferFS, 0);
   USBD_CDC_SetRxBuffer(hUsbDevice_0, UserRxBufferFS);
   return (USBD_OK);
   /* USER CODE END 3 */ 
@@ -213,6 +212,10 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
   case CDC_SET_LINE_CODING:   
+
+    break;
+
+  case CDC_GET_LINE_CODING:
 	pbuf[0] = (uint8_t)(115200);
 	pbuf[1] = (uint8_t)(115200 >> 8);
 	pbuf[2] = (uint8_t)(115200 >> 16);
@@ -220,10 +223,6 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 	pbuf[4] = 0;
 	pbuf[5] = 0;
 	pbuf[6] = 8;
-    break;
-
-  case CDC_GET_LINE_CODING:     
-
     break;
 
   case CDC_SET_CONTROL_LINE_STATE:
@@ -260,7 +259,7 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
-  USBD_CDC_SetRxBuffer(hUsbDevice_0, &Buf[0]);
+  //USBD_CDC_SetRxBuffer(hUsbDevice_0, &Buf[0]);
   USBD_CDC_ReceivePacket(hUsbDevice_0);
   return (USBD_OK);
   /* USER CODE END 6 */ 
@@ -280,12 +279,14 @@ static int8_t CDC_Receive_FS (uint8_t* Buf, uint32_t *Len)
 uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
-  /* USER CODE BEGIN 7 */ 
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUsbDevice_0->pClassData;
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
-  }
-  USBD_CDC_SetTxBuffer(hUsbDevice_0, Buf, Len);
+  /* USER CODE BEGIN 7 */
+  for (uint16_t i = 0; i < APP_TX_DATA_SIZE; ++i)
+	  UserTxBufferFS[i] = 0;
+
+  for (uint16_t i = 0; i < Len; ++i)
+	  UserTxBufferFS[i] = Buf[i];
+
+  USBD_CDC_SetTxBuffer(hUsbDevice_0, UserTxBufferFS, Len);
   result = USBD_CDC_TransmitPacket(hUsbDevice_0);
   /* USER CODE END 7 */ 
   return result;

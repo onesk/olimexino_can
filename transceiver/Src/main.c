@@ -87,6 +87,9 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_DEVICE_Init();
 
+  HAL_Delay(1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+
   /* USER CODE BEGIN 2 */
   for (int i = 0; i < 50; ++i)
   {
