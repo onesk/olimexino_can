@@ -88,8 +88,20 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  CanTxMsgTypeDef tx_msg;
   while (1)
   {
+	  tx_msg.DLC = 8;
+	  tx_msg.ExtId = 13;
+	  tx_msg.IDE = CAN_ID_EXT;
+	  tx_msg.RTR = CAN_RTR_DATA;
+	  tx_msg.StdId = 13;
+	  for (uint8_t i = 0; i < 8; ++i)
+		  tx_msg.Data[i] = i;
+
+	  hcan.pTxMsg = &tx_msg;
+	  HAL_CAN_Transmit(&hcan, 10);
+
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
