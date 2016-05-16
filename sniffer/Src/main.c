@@ -103,7 +103,7 @@ int main(void)
 	  hcan.pTxMsg = &tx_msg;
 	  HAL_CAN_Transmit(&hcan, 10);
 
-/*	  for (int i = 11; i >= 0; --i)
+	  for (int i = 11; i >= 0; --i)
 		  if (spi_tx[i] != '9')
 		  {
 			  spi_tx[i]++;
@@ -111,15 +111,9 @@ int main(void)
 		  } else
 		  {
 			  spi_tx[i] = '0';
-		  }*/
+		  }
 
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-
-	  for (int i = 0; i < 10000; ++i);
-
-	  HAL_SPI_Transmit(&hspi1, spi_tx, 13, 100);
-
-	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+	  HAL_UART_Transmit(&huart1, spi_tx, 13, 1000);
 
   /* USER CODE END WHILE */
 
