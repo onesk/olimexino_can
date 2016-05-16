@@ -2,14 +2,15 @@ import sys
 import serial
 import datetime
 import time
+import base64
+import struct
 
 fname = datetime.datetime.now().strftime('%Y_%m_%d__%H_%M_%S.can.log')
 
 stime = time.time()
-bytecount = 0
 with open(fname, "wb") as lf:
-    with serial.Serial(port = '/dev/tty.usbmodem1411',
-                       baudrate = 115200,
+    with serial.Serial(port = '/dev/tty.usbserial',
+                       baudrate = 500000,
                        bytesize = 8,
                        parity = serial.PARITY_NONE,
                        stopbits = 1,
@@ -18,11 +19,19 @@ with open(fname, "wb") as lf:
                        timeout = 200) as sp:
         while True:
             line = sp.readline()
-            lf.write(line)
+
+            if len(line) != 18:
+                print '!', len(line)
+                continue
+
+            try:
+                raw = base64.b64decode(line + "A==")
+            except e:
+                print e
+                continue
+
+            lf.write(struct.pack('<cf13s', '@', time.time() - stime, raw))
             lf.flush()
-            bytecount += len(line) + 1
-            speed = bytecount / (time.time() - stime + 1e-7)
-            sys.stdout.write("%.2f\n" % speed)
+
+            sys.stdout.write('.')
             sys.stdout.flush()
-            #sys.stdout.write('.')
-            #sys.stdout.flush()
