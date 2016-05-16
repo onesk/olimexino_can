@@ -106,13 +106,11 @@ int main(void)
   {
 	  led_swap();
 
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);
+	  while (GPIO_PIN_SET != HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_11));
 	  HAL_StatusTypeDef status = HAL_SPI_Receive(&hspi1, data, 13, 100);
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
 
 	  CDC_Transmit_FS(status == HAL_OK ? data : retry, 13);
 
-	  for (int i = 0; i < 2000; ++i);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
