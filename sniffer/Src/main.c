@@ -59,7 +59,32 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+int led = 0;
+void led_blink()
+{
+	led ^= 1;
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, led);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, led ^ 1);
+}
 
+CAN_FilterConfTypeDef filter;
+void setup_can_filter()
+{
+    filter.FilterIdHigh = 0;
+    filter.FilterIdLow = 0;
+    filter.FilterMaskIdHigh = 0;
+    filter.FilterMaskIdLow = 0;
+    filter.FilterMode = CAN_FILTERMODE_IDMASK;
+    filter.FilterScale = CAN_FILTERSCALE_32BIT;
+    filter.FilterNumber = 0;
+    filter.FilterFIFOAssignment = CAN_FIFO0;
+    filter.BankNumber = 0;
+    filter.FilterActivation = ENABLE;
+    HAL_CAN_ConfigFilter(&hcan, &filter);
+}
+
+static const char basis_64[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /* USER CODE END 0 */
 
 int main(void)
@@ -83,37 +108,86 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
+  setup_can_filter();
+
+  for (int i = 0; i < 10; ++i)
+  {
+	  led_blink();
+	  HAL_Delay(100);
+  }
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  CanTxMsgTypeDef tx_msg;
-  uint8_t spi_tx[13] = "000000000000\n";
+  CanRxMsgTypeDef rx_msg;
+  uint8_t prebuf[12];
+  uint8_t uart_msg[18];
+
   while (1)
   {
-	  tx_msg.DLC = 8;
-	  tx_msg.ExtId = 13;
-	  tx_msg.IDE = CAN_ID_EXT;
-	  tx_msg.RTR = CAN_RTR_DATA;
-	  tx_msg.StdId = 13;
-	  for (uint8_t i = 0; i < 8; ++i)
-		  tx_msg.Data[i] = i;
+	  //
 
-	  hcan.pTxMsg = &tx_msg;
-	  HAL_CAN_Transmit(&hcan, 10);
+	  while (__HAL_CAN_MSG_PENDING(&hcan, CAN_FIFO0) <= 0) ;
 
-	  for (int i = 11; i >= 0; --i)
-		  if (spi_tx[i] != '9')
+	  hcan.pRxMsg = &rx_msg;
+	  if (HAL_OK != HAL_CAN_Receive(&hcan, CAN_FIFO0, 3))
+		  continue;
+
+	  //
+
+	  uint8_t flags = rx_msg.DLC & 0xf;
+
+	  if (rx_msg.RTR == CAN_RTR_REMOTE)
+		  flags |= 0x10;
+
+	  if (rx_msg.IDE == CAN_ID_EXT)
+		  flags |= 0x20;
+
+	  uint32_t id = (rx_msg.IDE == CAN_ID_EXT ? rx_msg.ExtId : rx_msg.StdId);
+
+	  for (int i = 3; i >= 0; --i)
+	  {
+		  prebuf[i] = (id & 0xff);
+		  id >>= 8;
+	  }
+
+	  for (int i = 4; i < 12; ++i)
+		  prebuf[i] = 0;
+
+	  for (int i = 0; i < 8 && i < rx_msg.DLC; ++i)
+		  prebuf[4+i] = rx_msg.Data[i];
+
+	  //
+
+	  int j = 0;
+	  for (int i = 0; i < 12; i += 3, j += 4)
+	  {
+		  uint32_t triple = 0;
+		  for (int k = 0; k < 3; ++k)
 		  {
-			  spi_tx[i]++;
-			  break;
-		  } else
-		  {
-			  spi_tx[i] = '0';
+			  triple <<= 8;
+			  triple += prebuf[i+k];
 		  }
 
-	  HAL_UART_Transmit(&huart1, spi_tx, 13, 1000);
+		  for (int k = 0; k < 4; ++k)
+		  {
+			  uart_msg[j+3-k] = basis_64[triple & 63];
+			  triple >>= 6;
+		  }
+
+	  }
+
+	  uart_msg[16] = basis_64[flags];
+	  uart_msg[17] = '\n';
+
+	  //
+
+	  HAL_UART_Transmit(&huart1, uart_msg, 18, 1000);
+
+	  //
+
+	  led_blink();
 
   /* USER CODE END WHILE */
 
@@ -162,7 +236,7 @@ void MX_CAN_Init(void)
 
   hcan.Instance = CAN1;
   hcan.Init.Prescaler = 6;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.Mode = CAN_MODE_SILENT;
   hcan.Init.SJW = CAN_SJW_1TQ;
   hcan.Init.BS1 = CAN_BS1_6TQ;
   hcan.Init.BS2 = CAN_BS2_5TQ;
