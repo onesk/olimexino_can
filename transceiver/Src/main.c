@@ -100,21 +100,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t retry[] = "hiiiimmmmmmmm\n";
-  uint8_t data[8];
+  uint8_t retry[] = "retryretry12\n";
+  uint8_t data[13];
   while (1)
   {
 	  led_swap();
 
-	  if (HAL_OK == HAL_SPI_Receive(&hspi1, data, 8, 100))
-	  {
-		  CDC_Transmit_FS(data, 8);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);
+	  HAL_StatusTypeDef status = HAL_SPI_Receive(&hspi1, data, 13, 100);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
 
-	  } else
-	  {
-		  CDC_Transmit_FS(retry, 14);
+	  CDC_Transmit_FS(status == HAL_OK ? data : retry, 13);
 
-	  }
+	  for (int i = 0; i < 2000; ++i);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

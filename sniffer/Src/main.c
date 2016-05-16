@@ -89,7 +89,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   CanTxMsgTypeDef tx_msg;
-  int cnt = 0;
+  uint8_t spi_tx[13] = "000000000000\n";
   while (1)
   {
 	  tx_msg.DLC = 8;
@@ -103,19 +103,21 @@ int main(void)
 	  hcan.pTxMsg = &tx_msg;
 	  HAL_CAN_Transmit(&hcan, 10);
 
-	  cnt++;
-	  uint8_t spi_data[13] = "iiiimmmmMMMM\n";
-/*	  int ccnt = cnt;
-	  for (int i = 9; i >= 0; --i)
-	  {
-		  spi_data[i] = (ccnt % 10) + '0';
-		  ccnt /= 10;
-	  }
+	  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7)) ;
 
-	  spi_data[12] = '\n';
-	  spi_data[10] = spi_data[11] = 'X';
-*/
-	  HAL_SPI_Transmit(&hspi1, spi_data, 13, 10);
+	  for (int i = 11; i >= 0; --i)
+		  if (spi_tx[i] != '9')
+		  {
+			  spi_tx[i]++;
+			  break;
+		  } else
+		  {
+			  spi_tx[i] = '0';
+		  }
+
+	  for (int i = 0; i < 1000; ++i) ;
+
+	  HAL_SPI_Transmit(&hspi1, spi_tx, 13, 10);
 
   /* USER CODE END WHILE */
 
